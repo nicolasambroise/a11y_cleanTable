@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>TableCleaner : Script pour enlever les attributs obsolètes des tableaux</title>
+	<meta name="description" content="Ce script sert à enlever les attributs obsolètes des tableaux avant leur importation dans AEM">
+	<link rel="stylesheet" href="./richtexteditor/rte_theme_default.css" />
+	<script type="text/javascript" src="./richtexteditor/rte.js"></script>
+	<script type="text/javascript" src='./richtexteditor/plugins/all_plugins.js'></script>
+	<style>
+	html {
+		font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+	}
+
+	body {
+		margin: 0;
+		font-size: 16px;
+		line-height: 1.5;
+		word-wrap: break-word;
+		color: #1f2328;
+	}
+	header,main,footer{
+		max-width: 1012px;
+		margin-right: auto;
+		margin-left: auto;
+	}
+	h1 {
+		padding-bottom: 0.3em;
+		font-size: 2em;
+		border-bottom: 1px solid #eaecef;
+		margin-bottom: 16px;
+		font-weight: 600;
+		line-height: 1.25;
+	}
+	h1 strong{text-transform: uppercase; display:block;}
+	h2 {
+		padding-bottom: 0.3em;
+		font-size: 1.5em;
+		border-bottom: 1px solid #eaecef;
+		margin-top: 24px;
+		margin-bottom: 16px;
+		font-weight: 600;
+		line-height: 1.25;
+	}
+	footer{
+		text-align: right;
+	}
+	textarea{    
+		box-shadow: none;
+		border: 1px solid #dadada;
+		padding: 5px 20px;
+		height: 44px;
+		background: #fff;
+		color: #444;
+		font-size: 14px;
+		border-radius: 0;
+		width: 100%;
+		display: block;
+		font-weight: 400;
+		line-height: 1.5;
+		height: auto;
+		overflow: auto;
+		resize: vertical;
+	}
+	.btn-primary{
+		font-size: x-large;
+		margin: 0 auto;
+		display: block;
+		padding: 15px 50px;
+		background-color: #0075ff;
+		color: white;
+		border: 1px solid transparent;
+		cursor: pointer;
+	}
+	.btn-primary:hover,
+	.btn-primary:focus{
+		background-color: #fff ;
+		color: #0075ff;
+		border: 1px solid #0075ff;
+	}
+	#tablecaption{
+		border: 2px solid lightgray;
+		width: 350px;
+		max-width: 100%;
+		height: 25px;
+		margin-left: 5px;
+	}
+	#tablecaption:not([disabled]){
+		border-color:#0075ff;
+	}
+
+	</style>
+</head>
+<body>
+    <header>
+        <h1><strong lang="en">Table cleaner</strong> Script pour enlever les attributs obsolètes des tableaux</h1>
+    </header>
+	<main>
+		<article class="markdown-body entry-content container-lg" itemprop="text">
+			<h2 tabindex="-1" dir="auto">Etape 1 - Coller votre tableau Excel/Word à nettoyer</h2>
+			
+			<textarea name="" id="input" cols="30" rows="10" class="form-control"></textarea>
+			<!-- textarea name="" id="input" cols="30" rows="10" class="form-control">	
+	&lt;table border="1" cellspacing="0" cellpadding="0" id="mytable" class="table" style="width:100%;"&gt; 
+	 &lt;tbody&gt;
+	  &lt;tr&gt;
+	   &lt;td width="236" valign="top"&gt;Heading 1&lt;/td&gt; 
+	   &lt;td width="365" valign="top"&gt;Heading 2&lt;/td&gt; 
+	  &lt;/tr&gt;
+	  &lt;tr&gt;
+	   &lt;td width="236" valign="top"&gt;Item 1&lt;br&gt;&lt;/br&gt;&lt;/td&gt;
+	   &lt;td width="365" valign="top"&gt;Item 2&lt;p&gt;&nbsp;&lt;/p&gt;&lt;/td&gt; 
+	  &lt;/tr&gt;
+	 &lt;/tbody&gt;
+	&lt;/table&gt;	
+			</textarea -->
+			<p>Vos options:</p>
+			<input type="checkbox" id="removestyle" name="removestyle" value="removestyle" checked=""> <label for="removestyle">Enlever les styles inline</label>
+			<input type="checkbox" id="removeclass" name="removeclass" value="removeclass" checked=""> <label for="removeclass">Enlever les CSS Classes</label>
+			<input type="checkbox" id="removeid" name="removeid" value="removeid" checked=""> <label for="removeid">Enlever les ID</label>
+			<br>
+			<input type="checkbox" id="removebr" name="removebr" value="removebr" checked=""> <label for="removebr">Enlever les balises br</label>
+			<input type="checkbox" id="removep" name="removep" value="removep" checked=""> <label for="removep">Enlever les paragraphes vide</label>
+			<input type="checkbox" id="removeold" name="removeold" value="removeold" checked=""> <label for="removeold">Remplacer les balises obsolètes</label>
+		  
+			<h2 tabindex="-1" dir="auto">Etape 2 - En-tête du tableau</h2>
+			<input type="checkbox" id="scoperow" name="scoperow" value="scoperow"> <label for="scoperow">Présence d'en-tête de ligne</label>
+			<input type="checkbox" id="scopecol" name="scopecol" value="scopecol"> <label for="scopecol">Présence d'en-tête de colonne</label>
+		  
+			<h2 tabindex="-1" dir="auto">Etape 3 - Titre du tableau</h2>
+				<label for="tablecaption">Titre : </label>
+				<input type="text" name="tablecaption" id="tablecaption" disabled><br>
+				<input type="checkbox" id="hidecaption" name="hidecaption" value="hidecaption" disabled>
+				<label for="hidecaption">Rentre le titre invisible</label>
+				<p><strong>Note</strong> : pour les tableaux de présentation (sans en-tête) il n'y a pas de titre à mettre, <strong>obligatoire</strong> pour les autres</p>
+		  
+		  
+			<h2 tabindex="-1" dir="auto">Etape 4 - Finalisation</h2>
+			<input type="checkbox" id="minify" name="minify" value="minify"> <label for="minify">Minify code</label><br>
+				<button class="btn btn-primary" id="cleanHTML">Nettoyer mon tableau</button>
+				<br>
+			<br>
+			<h2 tabindex="-1" dir="auto">Etape 5 - Selectionne et copie l'HTML de votre tableau</h2>
+			  <textarea name="" id="output" cols="30" rows="10" class="form-control"></textarea> 
+			  <br><br>
+			<button class="btn btn-primary" id="addClipboard">Copier le resultat</button>			  
+		  
+		</article>
+	</main>
+	
+	<footer>
+		<p>Auteur : Nicolas AMBROISE</p>
+	</footer>
+<script>
+	// source : https://richtexteditor.com
+	var editor1cfg = {}
+	editor1cfg.toolbar = "mytoolbar";
+	
+	editor1cfg.svgCode_generate = '<svg viewBox="-2 -2 20 20" fill="#5F6368" style="width: 100%; height: 100%;"><path fill-rule="evenodd" d="M8 0a1 1 0 0 1 1 1v5.268l4.562-2.634a1 1 0 1 1 1 1.732L10 8l4.562 2.634a1 1 0 1 1-1 1.732L9 9.732V15a1 1 0 1 1-2 0V9.732l-4.562 2.634a1 1 0 1 1-1-1.732L6 8 1.438 5.366a1 1 0 0 1 1-1.732L7 6.268V1a1 1 0 0 1 1-1z" clip-rule="evenodd"></path></svg>';
+		
+	editor1cfg.toolbar_mytoolbar = "{bold,italic}|{insertorderedlist,insertunorderedlist}|removeformat|code"
+		+ "#{newdoc,generate,undo,redo,fullscreenenter,fullscreenexit}";
+	
+	var editor_input = new RichTextEditor("#input", editor1cfg);
+	
+	editor_input.attachEvent("exec_command_generate", function (state, cmd, value) {
+		state.returnValue = true;//set it has been handled
+		console.log("Clean textarea");
+
+		if (window.confirm("Do you really want to replace current content by lorem ipsum ?")) {
+		 editor_input.setHTMLCode('<table border="1" cellspacing="0" cellpadding="0" id="mytable" class="table" style="width:100%;"><tbody><tr><td width="236" valign="top">Heading 1</td><td width="365" valign="top">Heading 2</td></tr><tr><td width="236" valign="top">Item 1<br></br></td><td width="365" valign="top">Item 2<p>&nbsp</p></td></tr></tbody></table>');
+		}
+	});
+	
+
+	window.addEventListener('load', function(event) {
+
+		// Get references to the elements
+		const cleanButton = document.getElementById('cleanHTML');
+		const addClipboard = document.getElementById('addClipboard');
+		//const inputField = document.getElementById('input');
+		const outputField = document.getElementById('output');
+		
+		const tablecaption = document.getElementById('tablecaption');
+		const hidecaption = document.getElementById('hidecaption');
+		const scoperow = document.getElementById('scoperow');
+		const scopecol = document.getElementById('scopecol');
+
+		cleanButton.addEventListener('click', function() {
+			  console.log('clean');
+
+			  //let input = inputField.value;
+			  let input = editor_input.getHTMLCode();
+			  let strippedString = input.replace(/[\t]+/g,'');
+			  const space = document.createTextNode("\n");
+		
+			  // Checkboxes for style, id, class
+			  const removeStyleCheckbox = document.getElementById('removestyle');
+			  const removeIdCheckbox = document.getElementById('removeid');
+			  const removeClassCheckbox = document.getElementById('removeclass');
+
+			  if (removeStyleCheckbox.checked) {
+				strippedString = strippedString.replace(/ style=(\'|\")([ -0-9a-zA-Z:]*[ 0-9a-zA-Z;]*)*\1/g, '');
+			  }
+
+			  if (removeIdCheckbox.checked) {
+				strippedString = strippedString.replace(/ id=(\'|\")([ -0-9a-zA-Z:]*[ 0-9a-zA-Z;]*)*\1/g, '');
+			  }
+
+			  if (removeClassCheckbox.checked) {
+				strippedString = strippedString.replace(/ class=(\'|\")([ -0-9a-zA-Z:]*[ 0-9a-zA-Z;]*)*\1/g, '');
+			  }
+
+			  // Checkboxes for br, p and old elements
+			  const removeBrCheckbox = document.getElementById('removebr');
+			  const removePCheckbox = document.getElementById('removep');
+			  const removeOldCheckbox = document.getElementById('removeold');
+
+			  if (removeBrCheckbox.checked) {
+				strippedString = strippedString.replace(/<\/?br[^>]*>/g, "");
+			  }
+
+			  if (removePCheckbox.checked) {
+				strippedString = strippedString.replace(/\u00a0/g, " ").replace(/&nbsp;/g, " ").replace(/\xA0/g," ").replace(/<p> <\/p>/g, "").replace(/<\/?p[^>]*>/g, "");
+			  }
+
+			  if (removeOldCheckbox.checked) {
+				strippedString = strippedString
+					.replace(/ width=(\'|\")([ -0-9a-zA-Z:]*[ 0-9a-zA-Z;]*)*\1/g, '')
+					.replace(/ height=(\'|\")([ -0-9a-zA-Z:]*[ 0-9a-zA-Z;]*)*\1/g, '')
+					.replace(/ border=(\'|\")([ -0-9a-zA-Z:]*[ 0-9a-zA-Z;]*)*\1/g, '')
+					.replace(/ cellspacing=(\'|\")([ -0-9a-zA-Z:]*[ 0-9a-zA-Z;]*)*\1/g, '') 
+					.replace(/ cellpadding=(\'|\")([ -0-9a-zA-Z:]*[ 0-9a-zA-Z;]*)*\1/g, '')
+					.replace(/ valign=(\'|\")([ -0-9a-zA-Z:]*[ 0-9a-zA-Z;]*)*\1/g, '')
+					.replace(/ align=(\'|\")([ -0-9a-zA-Z:]*[ 0-9a-zA-Z;]*)*\1/g, '')
+					.replace(/ bgcolor=(\'|\")([ -0-9a-zA-Z:]*[ 0-9a-zA-Z;]*)*\1/g, '')
+					.replace(/ frame=(\'|\")([ -0-9a-zA-Z:]*[ 0-9a-zA-Z;]*)*\1/g, '')
+					.replace(/ rules=(\'|\")([ -0-9a-zA-Z:]*[ 0-9a-zA-Z;]*)*\1/g, '')
+					.replace(/ summary=(\'|\")([ -0-9a-zA-Z:]*[ 0-9a-zA-Z;]*)*\1/g, '')
+			  } 
+
+			  
+			  //console.log(strippedString);
+			  
+			  const template = document.createElement('template');
+			  template.innerHTML = strippedString;
+			  //console.log(template.content.childNodes);
+			  
+			  const tables = Array.from(template.content.childNodes).filter(item => item.tagName == 'TABLE');
+			  //console.log(tables);
+			  
+			  const table = tables[0];  
+			  //console.log(table);
+			  
+			  const caption = table.getElementsByTagName("caption");
+			  const hastbody = table.getElementsByTagName("tbody");
+			  const hasthead = table.getElementsByTagName("thead");
+
+			  if(table.length == 0 || table.tagName != 'TABLE') { alert("Votre code ne commence pas par un tableau"); outputField.value = "Error";}
+			  else if(tablecaption.value == "" && (scoperow.checked || scopecol.checked) && caption.length == 0){alert("Votre tableau n'a pas de titre !"); outputField.value = "Error";}
+			  else {
+	  
+				  if(hastbody.length == 0){
+					var tbody = document.createElement("tbody");
+					tbody.innerHTML = "\n  " + table.innerHTML + "\n";
+					table.innerHTML = '';
+					table.insertBefore(tbody, table.children[0]);
+				  }
+				  
+				  //console.log(hidecaption);
+				  //console.log(caption);
+					  
+				  if(tablecaption.value != "" && ( scoperow.checked || scopecol.checked )) {
+					if(caption.length > 0){ console.log("Votre tableau contient déjà une balise <caption>");}
+					let new_caption = document.createElement("caption");
+					new_caption.innerHTML = tablecaption.value;	
+					if(hidecaption.checked) {new_caption.classList.add("sr_only");}
+					table.insertBefore(new_caption, table.children[0]);
+					table.insertBefore(space, table.children[1]);
+				  }
+				  
+				  
+				  
+				  const trlist = table.getElementsByTagName("tr");
+
+				  
+				  // Si scoperow=true et scopecol=false : transformer la première balise de chaque <tr> en <th scope="row">
+				  if(scoperow.checked && !scopecol.checked) {
+				  
+					console.log(trlist)
+					console.log(trlist.length)
+				  
+					for(var i = 0; i < trlist.length; i++){
+					  var td = Array.from(trlist[i].childNodes).filter(item => item.nodeName != '#text');
+					   
+						//console.log(td)
+						//console.log(td[0].tagName)
+						//console.log(td[0].parentNode)
+					   
+						if(td[0].tagName == 'TD'){ 
+						  var th = document.createElement("th");
+						  th.innerHTML = td[0].innerHTML;
+						  th.setAttribute("scope","row");
+						  td[0].parentNode.insertBefore(th, td[0]);
+						  td[0].remove();
+						}
+					 };
+				  
+				  }
+				  
+				  // Si scoperow=false et scopecol=true : Ajouter le <thead> et transformer toutes les balises de la première <tr> en <th scope="col">
+				  else if(!scoperow.checked && scopecol.checked) {
+					let td = Array.from(trlist[0].childNodes).filter(item => item.nodeName != '#text');
+					const first_row = trlist[0];
+				  
+					for(var i = 0; i < td.length; i++){
+						if(td[i].tagName == 'TD'){ 
+						  var th = document.createElement("th");
+						  th.innerHTML = td[i].innerHTML;
+						  th.setAttribute("scope","col");
+						  td[i].parentNode.insertBefore(th, td[i]);
+						  td[i].remove();
+						}
+					}
+					if(hasthead.length == 0){
+						var thead = document.createElement("thead");
+						console.log(first_row);
+						thead.innerHTML = "\n  " + first_row.outerHTML + "\n";	
+						table.insertBefore(thead, table.children[1]);
+						table.insertBefore(space, table.children[2]);
+						first_row.remove();
+						console.log(table.getElementsByTagName("tbody")[0])
+						console.log(table.getElementsByTagName("tbody")[0].childNodes[0].nodeName)
+						if(table.getElementsByTagName("tbody")[0].childNodes[0].nodeName == '#text'){
+							table.getElementsByTagName("tbody")[0].childNodes[0].remove();
+						}
+					}	  
+				  }
+				  
+				  // Si scoperow=true et scopecol=true : Ajouter le <thead> et transformer toutes les balises de la première <tr> en <th scope="col"> et transformer la première balise de chaque <tr> en <th scope="row"> (sauf la première cellule)
+				  else if(scoperow.checked && scopecol.checked) {
+					let td = Array.from(trlist[0].childNodes).filter(item => item.nodeName != '#text');
+					const first_row = trlist[0];
+				  
+					for(var i = 1; i < td.length; i++){
+						if(td[i].tagName == 'TD'){ 
+						  var th = document.createElement("th");
+						  th.innerHTML = td[i].innerHTML;
+						  th.setAttribute("scope","col");
+						  td[i].parentNode.insertBefore(th, td[i]);
+						  td[i].remove();
+						}
+					}
+					
+					for(var i = 1; i < trlist.length; i++){
+						var inner_td = Array.from(trlist[i].childNodes).filter(item => item.nodeName != '#text');
+						if(inner_td[0].tagName == 'TD'){ 
+						  var th = document.createElement("th");
+						  th.innerHTML = inner_td[0].innerHTML;
+						  th.setAttribute("scope","row");
+						  inner_td[0].parentNode.insertBefore(th, inner_td[0]);
+						  inner_td[0].remove();
+						}
+					 };
+					
+					if(hasthead.length == 0){
+						var thead = document.createElement("thead");
+						console.log(first_row);
+						thead.innerHTML = "\n  " + first_row.outerHTML + "\n";	
+						table.insertBefore(thead, table.children[1]);
+						table.insertBefore(space, table.children[2]);
+						first_row.remove();
+						console.log(table.getElementsByTagName("tbody")[0])
+						console.log(table.getElementsByTagName("tbody")[0].childNodes[0].nodeName)
+						if(table.getElementsByTagName("tbody")[0].childNodes[0].nodeName == '#text'){
+							table.getElementsByTagName("tbody")[0].childNodes[0].remove();
+						}
+					}		  
+				  }
+				  
+				  // Si scoperow=false et scopecol=false : Ajouter l'attribut role=presentation sur l'en-tête
+				  else if(!scoperow.checked && !scopecol.checked) {
+					table.setAttribute("role", "presentation");
+				  }
+				  
+
+				  // Checkbox for minify
+				  const minifyCheckbox = document.getElementById('minify');
+				  let table_result = table.outerHTML; 
+				  
+				  if (minifyCheckbox.checked) {
+					table_result = table_result.replace( /\s\s+/g,'');
+				  }
+
+				  // Output
+				  outputField.value = table_result;
+			}
+		});
+		
+		addClipboard.addEventListener('click', function() {
+		  console.log('copy');
+		  
+		  outputField.select();
+		  document.execCommand("copy");
+		  
+		  //navigator.clipboard.writeText(outputField.value);
+		  
+		  alert("HTML copied !");
+		  
+		});
+		
+		scoperow.addEventListener('click', function() {
+			checkcaption();
+		});
+		scopecol.addEventListener('click', function() {
+			checkcaption();
+		});
+		
+		function checkcaption(){
+			if(scoperow.checked || scopecol.checked){
+				tablecaption.disabled = false;
+				hidecaption.disabled = false;
+			}
+			else{
+				tablecaption.disabled = true;
+				hidecaption.disabled = true;
+
+			}		
+		}
+		
+		
+	});
+	
+
+</script>
+</body>
+</html>
